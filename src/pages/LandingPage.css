@@ -1,0 +1,27 @@
+.landing-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem !important; /* Ukuran judul utama */
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  margin: 2rem 0;
+}
+
+.logo-container {
+  margin: 2rem 0;
+}
+
+.tech-stack {
+  margin-top: 3rem;
+  text-align: left;
+}

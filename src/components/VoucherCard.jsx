@@ -1,59 +1,40 @@
 import React from 'react';
-import {
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  Typography,
-  Chip,
-} from '@mui/material';
+import { Link } from 'react-router-dom';
+import './VoucherCard.css';
 
-const VoucherCard = ({ voucher, onRedeem, isLoading }) => {
-  const { tokenId, name, description, image, isRedeemed } = voucher;
+// Gambar placeholder pixel art baru
+const PIXEL_ART_COFFEE_CUP = "https://art.pixilart.com/sr244b76e199d26.png";
 
-  const handleRedeem = () => {
-    if (!isRedeemed) {
-      onRedeem(tokenId);
-    }
-  };
+const VoucherCard = ({ voucher, onRedeem }) => {
+  const { tokenId, name, isRedeemed } = voucher;
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        opacity: isRedeemed ? 0.6 : 1,
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-        ':hover': {
-          transform: 'translateY(-5px)',
-          boxShadow: (theme) => `0 8px 25px ${theme.palette.primary.main}33`,
-        },
-      }}
-    >
-      <CardMedia component="img" height="200" image={image} alt={name} />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography gutterBottom variant="h5" component="div">
-          {name}
-        </Typography>
-        <Chip label={`#${tokenId.toString()}`} sx={{ mb: 2 }} />
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
-      </CardContent>
-      <CardActions>
-        <Button
-          fullWidth
-          variant="contained"
-          color={isRedeemed ? 'success' : 'secondary'}
-          onClick={handleRedeem}
-          disabled={isRedeemed || isLoading}
-        >
-          {isRedeemed ? 'Telah Digunakan' : 'Gunakan Voucher'}
-        </Button>
-      </CardActions>
-    </Card>
+    <div className={`nes-container with-title is-centered voucher-card ${isRedeemed ? 'is-disabled' : ''}`}>
+      <p className="title">{`ID: ${tokenId}`}</p>
+      
+      <Link to={`/voucher/${tokenId}`} className="image-link">
+        <img src={PIXEL_ART_COFFEE_CUP} alt={name} className="voucher-image" />
+      </Link>
+
+      <h3 className="voucher-name">{name}</h3>
+
+      <div className="voucher-status">
+        {isRedeemed ? (
+          <span className="nes-text is-error">Telah Digunakan</span>
+        ) : (
+          <span className="nes-text is-success">Dapat Digunakan</span>
+        )}
+      </div>
+
+      <button
+        type="button"
+        className={`nes-btn ${isRedeemed ? 'is-disabled' : 'is-warning'}`}
+        disabled={isRedeemed}
+        onClick={onRedeem}
+      >
+        {isRedeemed ? 'Sudah Habis' : 'Gunakan'}
+      </button>
+    </div>
   );
 };
 

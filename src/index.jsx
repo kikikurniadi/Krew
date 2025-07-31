@@ -4,6 +4,7 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { liskSepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
+import { BrowserRouter } from 'react-router-dom'; // 1. Impor BrowserRouter
 
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme';
@@ -13,7 +14,9 @@ import './index.css';
 
 const config = createConfig({
   chains: [liskSepolia],
-  connectors: [injected()],
+  connectors: [
+    injected(),
+  ],
   transports: {
     [liskSepolia.id]: http(),
   },
@@ -28,9 +31,11 @@ root.render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <App />
+          <BrowserRouter> {/* 2. Bungkus App */}
+            <App />
+          </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
-  </StrictMode>,
+  </StrictMode>
 );

@@ -1,0 +1,51 @@
+/* Styling dasar untuk dialog */
+.nes-dialog {
+  max-width: 500px;
+  width: 90%;
+  /* Pastikan warna teks terlihat di latar belakang default (putih) */
+  color: #212529; 
+}
+
+/* DIUBAH: Tambahkan backdrop untuk kontras */
+.nes-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Override default margin agar terlihat lebih baik */
+.nes-dialog .title {
+  margin-bottom: 0;
+  color: #212529;
+}
+
+.nes-dialog p {
+    color: #212529;
+}
+
+.nes-field label {
+    color: #212529;
+}
+
+.nes-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dialog-menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Hapus padding default browser */
+menu {
+  padding: 0;
+  margin: 0;
+}

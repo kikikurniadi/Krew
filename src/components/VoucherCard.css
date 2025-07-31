@@ -1,69 +1,40 @@
-.card {
-  background-color: var(--card-background);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  border: 1px solid #444;
+.voucher-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.5rem !important;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.card:hover {
+.voucher-card:not(.is-disabled):hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(106, 75, 255, 0.3);
+  box-shadow: 0 8px 0 #000;
 }
 
-.card.redeemed {
+.voucher-card.is-disabled {
   opacity: 0.6;
 }
 
-.card-image {
+.image-link {
+  display: block;
   width: 100%;
-  height: 200px;
+}
+
+.voucher-image {
+  width: 100%;
+  height: auto;
   object-fit: cover;
+  background-color: #555; /* Latar belakang jika gambar transparan */
+  border-bottom: 4px solid #fff;
 }
 
-.card-content {
-  padding: 20px;
+.voucher-name {
+  font-size: 1.2rem !important;
+  margin-top: 0.5rem;
+  word-break: break-word;
 }
 
-.card-title {
-  margin: 0 0 10px 0;
-  font-size: 1.5rem;
-  color: var(--primary-color);
-}
-
-.card-description {
-  font-size: 1rem;
-  margin-bottom: 20px;
-  min-height: 40px;
-}
-
-.card-button {
-  width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  font-weight: bold;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background-color: var(--secondary-color);
-  color: #111;
-  transition: background-color 0.3s;
-}
-
-.card-button:hover:not(:disabled) {
-  background-color: #ffca28;
-}
-
-.card-button:disabled {
-  background-color: #555;
-  color: #999;
-  cursor: not-allowed;
-}
-
-.card.redeemed .card-button {
-  background-color: #4caf50; /* Green */
-  color: white;
+.voucher-status {
+  margin-bottom: 1rem;
 }

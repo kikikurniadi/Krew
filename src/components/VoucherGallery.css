@@ -1,12 +1,27 @@
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-  padding: 20px;
+.gallery-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
 }
 
-.gallery-message {
-  font-size: 1.2rem;
-  color: #888;
-  margin-top: 40px;
+.vouchers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.empty-gallery {
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-gallery p {
+  margin-bottom: 1rem;
+}
+
+/* Placeholder icon for an empty cup */
+.empty-cup::before {
+  content: "☕️"; /* Simple emoji placeholder */
+  font-size: 4rem;
+  opacity: 0.5;
 }

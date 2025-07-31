@@ -1,30 +1,46 @@
 import React from 'react';
-import { Grid, Typography, Box } from '@mui/material';
-import VoucherCard from './VoucherCard.jsx';
+import VoucherCard from './VoucherCard';
+import './VoucherGallery.css';
 
 const VoucherGallery = ({ vouchers, onRedeem, isLoading }) => {
+  if (isLoading && vouchers.length === 0) {
+    return (
+      /* DIUBAH: Hapus is-dark */
+      <div className="gallery-container nes-container with-title">
+        <p className="title">Koleksi Anda</p>
+        <p>Memuat voucher...</p>
+        <progress className="nes-progress is-pattern" value="100" max="100"></progress>
+      </div>
+    );
+  }
+
   if (!isLoading && vouchers.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', mt: 5 }}>
-        <Typography variant="body1" color="text.secondary">
-          Anda belum memiliki voucher. Coba buat satu!
-        </Typography>
-      </Box>
+      /* DIUBAH: Hapus is-dark */
+      <div className="gallery-container nes-container with-title">
+        <p className="title">Koleksi Anda</p>
+        <div className="empty-gallery">
+          <p>Anda belum memiliki voucher kopi.</p>
+          <p>Silakan buat satu untuk memulai!</p>
+          <i className="nes-icon empty-cup is-large"></i>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Grid container spacing={4}>
-      {vouchers.map((voucher) => (
-        <Grid item xs={12} sm={6} md={4} key={voucher.tokenId.toString()}>
+    <div className="gallery-container nes-container with-title">
+      <p className="title">Koleksi Anda</p>
+      <div className="vouchers-grid">
+        {vouchers.map((voucher) => (
           <VoucherCard
+            key={voucher.tokenId}
             voucher={voucher}
-            onRedeem={onRedeem}
-            isLoading={isLoading}
+            onRedeem={() => onRedeem(voucher.tokenId)}
           />
-        </Grid>
-      ))}
-    </Grid>
+        ))}
+      </div>
+    </div>
   );
 };
 
