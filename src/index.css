@@ -1,36 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-/* Impor nes.css */
-@import 'nes.css/css/nes.min.css';
+/* 
+  File ini sekarang lebih sederhana.
+  Impor font dan gaya dasar (seperti rendering gambar) 
+  sekarang ditangani oleh src/theme.js melalui MuiCssBaseline.
+*/
 
 body {
   margin: 0;
-  font-family: 'Press Start 2P', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  background-color: #fdfdff; /* Warna latar belakang dari tema */
+
+  /* Fallback font jika tema MUI gagal dimuat */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+  
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
-  /* DIUBAH: Tema terang */
-  background-color: #ffffff; 
-  color: #212529;
-  
-  /* Menghilangkan anti-aliasing untuk font-rendering yang tajam dan pixelated */
-  font-smooth: never;
-  -webkit-font-smoothing : none;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
-
-/* Override global untuk memastikan font pixel digunakan di mana-mana */
-* {
-  font-family: 'Press Start 2P', cursive !important;
-}
-
-/* Membuat gambar terlihat "pixelated" */
-img {
-  image-rendering: pixelated;
 }

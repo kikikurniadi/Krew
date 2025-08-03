@@ -1,53 +1,52 @@
 import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import { mock } from 'vitest-mock-extended';
+import { mainnet, sepolia } from 'wagmi/chains';
+import { createConfig, http } from 'wagmi';
+import { injected } from 'wagmi/connectors'
 
-// Membersihkan jsdom setelah setiap tes
+// Mocking wagmi connector
+export const config = createConfig({
+  chains: [mainnet, sepolia],
+  connectors: [
+    injected(),
+  ],
+  transports: {
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+  },
+})
+
+// Mocking axios
+vi.mock('axios');
+
+// Mocking html5-qrcode
+vi.mock('html5-qrcode', () => ({
+  Html5QrcodeScanner: vi.fn().mockImplementation(() => ({
+    render: vi.fn(),
+    clear: vi.fn(),
+  })),
+}));
+
+// Mocking matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+
+// Runs a cleanup after each test case
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
 });
-
-// --- Mocking Terpusat ---
-
-// 1. Mock 'react-router-dom'
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useParams: () => ({ tokenId: '1' }), // Selalu gunakan tokenId '1'
-    useNavigate: () => vi.fn(),
-  };
-});
-
-// 2. Mock 'wagmi' dengan kontrol eksternal
-const mockAccount = vi.fn();
-const mockReadContract = vi.fn();
-const mockWriteContract = vi.fn(() => ({ writeContract: vi.fn(), isPending: false, error: null }));
-
-vi.mock('wagmi', async () => {
-  const actual = await vi.importActual('wagmi');
-  return {
-    ...actual,
-    useAccount: mockAccount,
-    useReadContract: mockReadContract,
-    useWriteContract: mockWriteContract,
-    useWaitForTransactionReceipt: () => ({ isLoading: false, isSuccess: false }),
-  };
-});
-
-// 3. Ekspor fungsi untuk mengontrol mock dari dalam file tes
-export const setMockAccount = (account) => mockAccount.mockReturnValue(account);
-export const setMockReadContract = (implementation) => mockReadContract.mockImplementation(implementation);
-export const setMockWriteContract = (implementation) => mockWriteContract.mockImplementation(implementation);
-
-// 4. Mock global 'fetch'
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({
-        name: 'Kopi Uji Coba',
-        description: 'Deskripsi untuk tes.',
-        image: 'test.jpg'
-    }),
-  })
-);

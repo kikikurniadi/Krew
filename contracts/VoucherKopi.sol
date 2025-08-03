@@ -3,33 +3,39 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /**
  * @title VoucherKopi
- * @dev A smart contract for creating and redeeming coffee vouchers as NFTs.
- * The contract owner can mint new vouchers for specified recipients.
- * The NFT owner can redeem the voucher, which is a one-time action.
+ * @dev A smart contract for creating, redeeming, and managing tiered coffee vouchers as NFTs.
  */
 contract VoucherKopi is ERC721URIStorage, Ownable {
-    // Counter for token IDs, starting from 1.
     uint256 private _nextTokenId;
 
-    // Mapping to track whether a voucher (NFT) has been redeemed.
-    mapping(uint256 => bool) public isRedeemed;
+    enum VoucherType { Espresso, Cappuccino, Luwak }
 
-    /**
-     * @dev Initializes the contract, setting the name, symbol, and owner.
-     */
-    constructor() ERC721("Voucher Kopi", "KOPI") Ownable(msg.sender) {}
+    struct Voucher {
+        VoucherType voucherType;
+        bool isRedeemed;
+    }
+    
+    struct VoucherData {
+        uint256 tokenId;
+        address owner;
+        string tokenURI;
+        VoucherType voucherType;
+        bool isRedeemed;
+    }
 
-    /**
-     * @dev Mints a new coffee voucher NFT.
-     * @param recipient The address that will receive the minted NFT.
-     * @param tokenURI The URI for the NFT's metadata (e.g., pointing to a JSON file).
-     * Requirements:
-     * - Only the contract owner can call this function.
-     */
-    function mintVoucher(address recipient, string calldata tokenURI)
+    mapping(uint256 => Voucher) public voucherDetails;
+    mapping(address => uint256) public redeemedCount;
+    mapping(uint256 => bool) private _activeTokenIds;
+
+    constructor() ERC721("Voucher Kopi", "KOPI") Ownable(msg.sender) {
+        _nextTokenId = 1;
+    }
+
+    function mintVoucher(address recipient, string calldata tokenURI, VoucherType voucherType)
         public
         onlyOwner
         returns (uint256)
@@ -37,29 +43,94 @@ contract VoucherKopi is ERC721URIStorage, Ownable {
         uint256 newItemId = _nextTokenId++;
         _safeMint(recipient, newItemId);
         _setTokenURI(newItemId, tokenURI);
+        
+        voucherDetails[newItemId] = Voucher({
+            voucherType: voucherType,
+            isRedeemed: false
+        });
+        _activeTokenIds[newItemId] = true;
+
         return newItemId;
     }
 
-    /**
-     * @dev Redeems a coffee voucher NFT.
-     * @param tokenId The ID of the NFT to be redeemed.
-     * Requirements:
-     * - The caller must be the owner of the NFT.
-     * - The voucher must not have been redeemed before.
-     */
     function redeemVoucher(uint256 tokenId) public {
-        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this voucher.");
-        require(!isRedeemed[tokenId], "This voucher has already been redeemed.");
-
-        isRedeemed[tokenId] = true;
+        require(ownerOf(tokenId) == msg.sender, "Only the voucher owner can redeem.");
+        _redeem(tokenId, msg.sender);
     }
 
-    /**
-     * @dev Returns the total number of vouchers minted so far.
-     * In ERC721, totalSupply() from the parent contract already provides this.
-     * This function is kept for potential future logic if needed.
-     */
-    function getTotalVouchers() public view returns (uint256) {
-        return _nextTokenId;
+    function redeemVoucherByOwner(uint256 tokenId) public onlyOwner {
+        address voucherHolder = ownerOf(tokenId);
+        _redeem(tokenId, voucherHolder);
+    }
+
+    function _redeem(uint256 tokenId, address user) internal {
+        Voucher storage voucher = voucherDetails[tokenId];
+        require(!voucher.isRedeemed, "This voucher has already been redeemed.");
+
+        voucher.isRedeemed = true;
+        redeemedCount[user]++;
+    }
+
+    function getVoucherDetails(uint256 tokenId) public view returns (VoucherType, bool) {
+        Voucher storage voucher = voucherDetails[tokenId];
+        return (voucher.voucherType, voucher.isRedeemed);
+    }
+    
+    function getVouchersByOwner(address owner) public view returns (VoucherData[] memory) {
+        uint256 ownerBalance = balanceOf(owner);
+        if (ownerBalance == 0) {
+            return new VoucherData[](0);
+        }
+
+        VoucherData[] memory usersVouchers = new VoucherData[](ownerBalance);
+        uint256 currentIndex = 0;
+        for (uint256 i = 1; i < _nextTokenId; i++) {
+            if (_activeTokenIds[i] && ownerOf(i) == owner) {
+                usersVouchers[currentIndex] = _getVoucherData(i);
+                currentIndex++;
+            }
+        }
+        return usersVouchers;
+    }
+
+    function getAllVouchers() public view returns (VoucherData[] memory) {
+        uint256 totalVouchers = 0;
+        for (uint256 i = 1; i < _nextTokenId; i++) {
+            if (_activeTokenIds[i]) {
+                totalVouchers++;
+            }
+        }
+
+        VoucherData[] memory allVouchers = new VoucherData[](totalVouchers);
+        uint256 currentIndex = 0;
+        for (uint256 i = 1; i < _nextTokenId; i++) {
+            if (_activeTokenIds[i]) {
+                 allVouchers[currentIndex] = _getVoucherData(i);
+                 currentIndex++;
+            }
+        }
+        return allVouchers;
+    }
+
+    function _getVoucherData(uint256 tokenId) internal view returns (VoucherData memory) {
+        Voucher storage voucher = voucherDetails[tokenId];
+        return VoucherData({
+            tokenId: tokenId,
+            owner: ownerOf(tokenId),
+            tokenURI: tokenURI(tokenId),
+            voucherType: voucher.voucherType,
+            isRedeemed: voucher.isRedeemed
+        });
+    }
+
+    function _update(address to, uint256 tokenId, address auth) internal virtual override(ERC721) returns (address) {
+        if (to == address(0)) {
+            _activeTokenIds[tokenId] = false;
+        }
+        return super._update(to, tokenId, auth);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

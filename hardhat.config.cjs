@@ -1,13 +1,17 @@
-require('@nomicfoundation/hardhat-toolbox');
-require('dotenv').config();
+require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: '0.8.20',
+  solidity: "0.8.20",
   networks: {
-    'lisk-sepolia': {
-      url: 'https://rpc.sepolia-api.lisk.com',
-      accounts: [process.env.WALLET_KEY],
+    lisk_sepolia: {
+      url: "https://rpc.sepolia-api.lisk.com",
+      accounts: [process.env.PRIVATE_KEY],
+    },
+    sepolia: {
+      url: "https://sepolia.drpc.org",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
 };

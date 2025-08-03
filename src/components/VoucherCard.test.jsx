@@ -1,77 +1,80 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '../test/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import VoucherCard from './VoucherCard';
+import axios from 'axios';
+import { setMockConnector } from '@wagmi/core/test';
+import VoucherCard from '../components/VoucherCard';
 
-// Wrapper untuk menyediakan konteks Router, karena VoucherCard menggunakan <Link>
-const renderWithRouter = (ui, { route = '/' } = {}) => {
-  window.history.pushState({}, 'Test page', route);
-  return render(ui, { wrapper: BrowserRouter });
-};
+// Mock data
+const mockOnRedeem = vi.fn();
+const mockOnTransfer = vi.fn();
+const ownerAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+const notOwnerAddress = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
 describe('VoucherCard Component', () => {
-  // Mock function untuk onRedeem
-  const mockOnRedeem = vi.fn();
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
 
-  // Data mock untuk voucher yang belum ditebus
-  const mockVoucher = {
-    tokenId: 1,
-    name: 'Kopi Susu',
-    description: 'Kopi susu Gula Aren',
-    image: 'https://art.pixilart.com/sr244b76e199d26.png',
-    isRedeemed: false,
-  };
+    it('Skenario A: Menampilkan detail dengan benar untuk voucher yang BELUM ditebus', async () => {
+        setMockConnector({ accounts: [ownerAddress] });
+        axios.get.mockResolvedValue({
+            data: { name: 'Kopi Enak', description: 'Voucher untuk secangkir kopi mantap' },
+        });
 
-  // Data mock untuk voucher yang sudah ditebus
-  const mockRedeemedVoucher = {
-    ...mockVoucher,
-    isRedeemed: true,
-  };
+        render(<VoucherCard tokenId={1} onRedeem={mockOnRedeem} onTransfer={mockOnTransfer} />);
 
-  // Reset mocks sebelum setiap tes
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+        await waitFor(() => {
+            expect(screen.getByText('Kopi Enak')).toBeInTheDocument();
+            expect(screen.getByText('Voucher untuk secangkir kopi mantap')).toBeInTheDocument();
+            expect(screen.getByText('Status: Belum Ditebus')).toBeInTheDocument();
+            expect(screen.getByText('Gunakan')).toBeEnabled();
+        });
+    });
 
-  it('Skenario A: Menampilkan detail dengan benar untuk voucher yang BELUM ditebus', () => {
-    renderWithRouter(<VoucherCard voucher={mockVoucher} />);
-    expect(screen.getByText('Kopi Susu')).toBeInTheDocument();
-    expect(screen.getByText(/ID: 1/i)).toBeInTheDocument();
-    const button = screen.getByRole('button', { name: /Gunakan/i });
-    expect(button).toBeInTheDocument();
-    expect(button).not.toBeDisabled();
-  });
+    it('Skenario B: Menampilkan status dengan benar untuk voucher yang SUDAH ditebus', async () => {
+        setMockConnector({ accounts: [ownerAddress] });
+        axios.get.mockResolvedValue({
+            data: { name: 'Kopi Bekas', description: 'Voucher sudah dipakai' },
+        });
 
-  it('Skenario B: Menampilkan status dengan benar untuk voucher yang SUDAH ditebus', () => {
-    renderWithRouter(<VoucherCard voucher={mockRedeemedVoucher} />);
-    expect(screen.getByText('Kopi Susu')).toBeInTheDocument();
-    const button = screen.getByRole('button', { name: /Sudah Habis/i });
-    expect(button).toBeInTheDocument();
-    expect(button).toBeDisabled();
-  });
+        // Di sini kita menandai voucher sebagai sudah ditebus
+        render(<VoucherCard tokenId={2} onRedeem={mockOnRedeem} onTransfer={mockOnTransfer} isRedeemed={true} />);
 
-  it('Skenario C: Memanggil onRedeem saat tombol "Gunakan" diklik', () => {
-    // 1. Render komponen dengan prop onRedeem
-    renderWithRouter(<VoucherCard voucher={mockVoucher} onRedeem={mockOnRedeem} />);
+        await waitFor(() => {
+            expect(screen.getByText('Kopi Bekas')).toBeInTheDocument();
+            expect(screen.getByText('Status: Sudah Ditebus')).toBeInTheDocument();
+            expect(screen.getByText('Gunakan')).toBeDisabled();
+        });
+    });
 
-    // 2. Cari dan klik tombol "Gunakan"
-    const useButton = screen.getByRole('button', { name: /Gunakan/i });
-    fireEvent.click(useButton);
+    it('Skenario C: Memanggil onRedeem saat tombol "Gunakan" diklik', async () => {
+        setMockConnector({ accounts: [ownerAddress] });
+        axios.get.mockResolvedValue({
+            data: { name: 'Kopi Siap Pakai' },
+        });
 
-    // 3. Verifikasi bahwa onRedeem dipanggil
-    expect(mockOnRedeem).toHaveBeenCalledTimes(1);
-  });
-  
-  it('Skenario D: TIDAK memanggil onRedeem untuk voucher yang sudah digunakan', () => {
-    // 1. Render komponen dengan voucher yang sudah ditebus
-    renderWithRouter(<VoucherCard voucher={mockRedeemedVoucher} onRedeem={mockOnRedeem} />);
+        render(<VoucherCard tokenId={3} onRedeem={mockOnRedeem} onTransfer={mockOnTransfer} />);
 
-    // 2. Tombol "Sudah Habis" seharusnya dinonaktifkan
-    const usedButton = screen.getByRole('button', { name: /Sudah Habis/i });
-    expect(usedButton).toBeDisabled();
+        await waitFor(() => {
+            fireEvent.click(screen.getByText('Gunakan'));
+            expect(mockOnRedeem).toHaveBeenCalledWith(3);
+        });
+    });
 
-    // 3. (Opsional tapi bagus) Coba klik dan pastikan onRedeem tidak dipanggil
-    fireEvent.click(usedButton);
-    expect(mockOnRedeem).not.toHaveBeenCalled();
-  });
+    it('Skenario D: TIDAK memanggil onRedeem untuk voucher yang sudah digunakan', async () => {
+        setMockConnector({ accounts: [ownerAddress] });
+        axios.get.mockResolvedValue({
+            data: { name: 'Kopi Basi' },
+        });
+
+        render(<VoucherCard tokenId={4} onRedeem={mockOnRedeem} onTransfer={mockOnTransfer} isRedeemed={true} />);
+
+        await waitFor(() => {
+            const redeemButton = screen.getByText('Gunakan');
+            expect(redeemButton).toBeDisabled();
+            fireEvent.click(redeemButton);
+            expect(mockOnRedeem).not.toHaveBeenCalled();
+        });
+    });
 });

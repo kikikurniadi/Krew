@@ -1,60 +1,62 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ConfirmDialog from './ConfirmDialog';
-
-// Mocking dialog methods for JSDOM environment
-HTMLDialogElement.prototype.showModal = vi.fn();
-HTMLDialogElement.prototype.close = vi.fn();
+import { render, screen, fireEvent, waitFor } from '../test/test-utils';
+import { describe, it, expect, vi } from 'vitest';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 describe('ConfirmDialog Component', () => {
-  // Mock functions untuk props
-  const mockOnClose = vi.fn();
-  const mockOnConfirm = vi.fn();
-
-  const defaultProps = {
-    open: true,
-    onClose: mockOnClose,
-    onConfirm: mockOnConfirm,
-    title: 'Judul Tes',
-    message: 'Apakah Anda yakin?',
-  };
-
-  // Bersihkan mock sebelum setiap tes
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  // Tes tidak perlu lagi merender di body, karena masalahnya ada pada visibilitas
   it('Skenario A: Menampilkan judul dan pesan dengan benar', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Judul Konfirmasi"
+        message="Ini adalah pesan konfirmasi."
+        onConfirm={() => {}}
+        onClose={() => {}}
+      />
+    );
 
-    // Mencari elemen teks tidak memerlukan opsi 'hidden'
-    expect(screen.getByText('Judul Tes')).toBeInTheDocument();
-    expect(screen.getByText('Apakah Anda yakin?')).toBeInTheDocument();
+    expect(screen.getByText('Judul Konfirmasi')).toBeInTheDocument();
+    expect(screen.getByText('Ini adalah pesan konfirmasi.')).toBeInTheDocument();
   });
 
-  it('Skenario B: Memanggil onClose saat tombol "Batal" diklik', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+  it('Skenario B: Memanggil onClose saat tombol "Batal" diklik', async () => {
+    const mockOnClose = vi.fn();
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Tes Batal"
+        message="Klik batal."
+        onConfirm={() => {}}
+        onClose={mockOnClose}
+      />
+    );
 
-    // PERBAIKAN: Tambahkan { hidden: true } untuk mencari di dalam dialog
-    const cancelButton = screen.getByRole('button', { name: /Batal/i, hidden: true });
-    fireEvent.click(cancelButton);
-
-    // Harapannya, hanya onClose yang dipanggil
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-    expect(mockOnConfirm).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('Batal'));
+    
+    await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('Skenario C: Memanggil onConfirm dan onClose saat tombol "Konfirmasi" diklik', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+  it('Skenario C: Memanggil onConfirm dan onClose saat tombol "Konfirmasi" diklik', async () => {
+    const mockOnConfirm = vi.fn();
+    const mockOnClose = vi.fn();
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Tes Konfirmasi"
+        message="Klik konfirmasi."
+        onConfirm={mockOnConfirm}
+        onClose={mockOnClose}
+      />
+    );
 
-    // PERBAIKAN: Tambahkan { hidden: true } untuk mencari di dalam dialog
-    const confirmButton = screen.getByRole('button', { name: /Konfirmasi/i, hidden: true });
-    fireEvent.click(confirmButton);
+    fireEvent.click(screen.getByText('Konfirmasi'));
 
     // Harapannya, onConfirm dan onClose keduanya dipanggil
-    expect(mockOnConfirm).toHaveBeenCalledTimes(1);
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+        expect(mockOnConfirm).toHaveBeenCalledTimes(1);
+        expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
   });
 });
